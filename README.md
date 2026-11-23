@@ -48,6 +48,10 @@ Join a room:
 
 Switch windows with `Alt+[1-9]` or `:win <name>`.
 
+Open chat and channel windows and the active window are saved to `layout.toml`
+in the data directory whenever they change. They reopen when their account first
+connects after a restart, however Aparté was closed.
+
 ### Screen layout
 
 The top row is a **tab bar** listing every open window in open order: the

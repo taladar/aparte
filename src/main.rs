@@ -22,6 +22,7 @@ mod crypto;
 mod i18n;
 #[cfg(feature = "image")]
 mod image;
+mod layout;
 mod mods;
 mod storage;
 mod word;

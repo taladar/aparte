@@ -1014,6 +1014,7 @@ impl Aparte {
             },
         };
 
+        let layout_path = storage_path.with_file_name("layout.toml");
         let (event_tx, event_rx) = mpsc::unbounded_channel();
         let (send_tx, send_rx) = mpsc::unbounded_channel();
         let (iq_tx, iq_rx) = mpsc::unbounded_channel();
@@ -1049,7 +1050,7 @@ impl Aparte {
             "client", "console", "Aparté", "en",
         )));
         aparte.add_mod(Mod::Bookmarks(mods::bookmarks::BookmarksMod::default()));
-        aparte.add_mod(Mod::UI(mods::ui::UIMod::new(&config)));
+        aparte.add_mod(Mod::UI(mods::ui::UIMod::new(&config, layout_path)));
         aparte.add_mod(Mod::Mam(mods::mam::MamMod::default()));
         aparte.add_mod(Mod::Messages(mods::messages::MessagesMod::default()));
         aparte.add_mod(Mod::Correction(mods::correction::CorrectionMod::default()));

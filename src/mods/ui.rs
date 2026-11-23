@@ -16,6 +16,7 @@ use std::collections::{HashMap, HashSet, VecDeque};
 use std::fmt;
 use std::hash::{Hash, Hasher};
 use std::panic;
+use std::path::PathBuf;
 use std::pin::Pin;
 use std::rc::Rc;
 use std::str::FromStr;
@@ -51,6 +52,7 @@ use crate::config::{Config, Theme};
 use crate::conversation::{Channel, Chat, Conversation};
 use crate::core::{Aparte, AparteAsync, Event, ModTrait, UIMode as Mode};
 use crate::i18n;
+use crate::layout::{LayoutTracker, SavedWindow};
 use crate::message::{Direction, Message, MessageView, XmppMessageType};
 use crate::mods::bookmarks::BookmarksMod;
 use crate::mods::messages::MessagesMod;
@@ -1336,6 +1338,7 @@ pub struct UIMod {
     dimensions: Dimensions,
     /// Set after the first Enter press on a /command input. The next Enter send is allowed.
     slash_warned: bool,
+    layout: LayoutTracker,
 }
 
 impl UIMod {
@@ -1354,6 +1357,8 @@ impl UIMod {
     fn finish_event(&mut self, aparte: &mut Aparte, before: Instant) {
         log::trace!("Mod::UI handled event in {:.2?}", before.elapsed());
 
+        self.sync_layout();
+
         // Mark UI as needing a render; actual render happens once per event batch
         // in the main loop via render_if_dirty().
         self.dirty = true;
@@ -1364,7 +1369,59 @@ impl UIMod {
         }
     }
 
-    pub fn new(_config: &Config) -> Self {
+    fn sync_layout(&mut self) {
+        if let Some(window) = self
+            .layout
+            .take_pending_active(&self.windows, self.current_window.as_deref())
+        {
+            self.change_window(&window);
+        }
+        let windows = self
+            .windows
+            .iter()
+            .filter_map(|window| self.conversations.get(window))
+            .map(|conversation| SavedWindow {
+                account: conversation.get_account().to_bare().to_string(),
+                jid: conversation.get_jid().to_string(),
+                nick: match conversation {
+                    Conversation::Chat(_) => None,
+                    Conversation::Channel(channel) => Some(channel.nick.clone()),
+                },
+            })
+            .collect();
+        self.layout.update(windows, self.current_window.clone());
+    }
+
+    fn restore_layout(&mut self, aparte: &mut Aparte, account: &Account) {
+        for saved in self.layout.begin_restore(&account.to_bare().to_string()) {
+            let Ok(jid) = BareJid::from_str(&saved.jid) else {
+                log::warn!("Ignoring saved window with invalid JID {}", saved.jid);
+                continue;
+            };
+            match saved.nick {
+                Some(nick) => match jid.with_resource_str(&nick) {
+                    Ok(channel) => aparte.schedule(Event::Join {
+                        account: account.clone(),
+                        channel: Jid::from(channel),
+                        user_request: false,
+                    }),
+                    Err(err) => log::warn!("Ignoring saved channel {}: {err}", saved.jid),
+                },
+                None if !self.windows.contains(&saved.jid) => {
+                    self.add_conversation(
+                        aparte,
+                        &Conversation::Chat(Chat {
+                            account: account.clone(),
+                            contact: jid,
+                        }),
+                    );
+                }
+                None => {}
+            }
+        }
+    }
+
+    pub fn new(_config: &Config, layout_path: PathBuf) -> Self {
         let screen = Arc::new(RwLock::new(OffscreenRenderBuffer::default()));
         let panic_handler = PanicHandler::new();
         let (width, height) = crossterm::terminal::size().unwrap();
@@ -1387,6 +1444,7 @@ impl UIMod {
             _panic_handler: panic_handler,
             dirty: true,
             slash_warned: false,
+            layout: LayoutTracker::load(layout_path),
             dimensions: Dimensions {
                 top: 1,
                 left: 1,
@@ -3783,6 +3841,7 @@ impl ModTrait for UIMod {
                     account.clone(),
                     jid.clone(),
                 )));
+                self.restore_layout(aparte, account);
             }
             Event::Omemo(event @ OmemoEvent::NewDevice { .. }) => {
                 self.root

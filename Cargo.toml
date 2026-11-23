@@ -70,6 +70,10 @@ name = "xmpp_integration"
 required-features = ["insecure-xmpp"]
 
 [[test]]
+name = "layout_restore"
+required-features = ["insecure-xmpp"]
+
+[[test]]
 name = "muc"
 required-features = ["insecure-xmpp"]
 

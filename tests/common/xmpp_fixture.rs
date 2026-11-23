@@ -1724,8 +1724,11 @@ impl XmppFixture {
              password = \"test\"\n"
         );
         let harness = Harness::spawn(&config, &[("APARTE_INSECURE_XMPP", "1")]);
+        // A restored window replaces the console that shows "Connected as".
+        let connected_text = std::env::var("APARTE_TEST_CONNECTED_TEXT")
+            .unwrap_or_else(|_| "Connected as".to_string());
         assert!(
-            wait_for_screen(&harness, "Connected as", Duration::from_secs(15)),
+            wait_for_screen(&harness, &connected_text, Duration::from_secs(15)),
             "aparte did not connect within 15s",
         );
         (
