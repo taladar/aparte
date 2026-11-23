@@ -516,7 +516,7 @@ Examples:
     },
     password: Password = {
         lookup: |aparte, _command| {
-            aparte.config.accounts.get(&account_name).and_then(|account| account.password.clone())
+            aparte.config.accounts.get(&account_name).and_then(ConnectionInfo::resolve_password)
         }
     },
 },
@@ -534,6 +534,7 @@ Examples:
                 port: None,
                 autoconnect: false,
                 password: None,
+                password_command: None,
             }
         } else {
             anyhow::bail!("Unknown account or invalid jid {account_name}");

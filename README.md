@@ -195,7 +195,14 @@ theme_name = "catppuccin-mocha"
 [accounts.example]
 jid = "me@example.org/aparte"
 autoconnect = true
+# Optional: program and arguments, run without a shell
+password_command = ["pass", "show", "xmpp/me@example.org"]
 ```
+
+`password_command` uses the first line of the command's output as the password.
+If it fails, returns nothing or takes longer than two minutes, Aparté prompts for
+the password instead. The UI waits while the command runs, and a terminal pinentry
+is not available, so use a graphical pinentry if your key can be locked.
 
 Contact
 -------
