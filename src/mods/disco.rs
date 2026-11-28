@@ -10,7 +10,6 @@ use anyhow::{anyhow, Result};
 
 use tokio_xmpp::IqResponse;
 use xmpp_parsers::disco;
-use xmpp_parsers::disco::Feature;
 use xmpp_parsers::iq::Iq;
 use xmpp_parsers::jid::Jid;
 use xmpp_parsers::ns;
@@ -21,7 +20,7 @@ use crate::i18n;
 
 pub struct DiscoMod {
     identity: disco::Identity,
-    client_features: HashSet<Feature>,
+    client_features: HashSet<String>,
     server_features: HashMap<Account, Vec<String>>,
     jid_features: HashMap<(Account, Jid), Vec<String>>,
 }
@@ -42,8 +41,8 @@ impl DiscoMod {
     }
 
     pub fn add_feature<S: Into<String>>(&mut self, feature: S) {
-        let feature = Feature::new(feature.into());
-        log::debug!("Adding `{}` feature", feature.var);
+        let feature = feature.into();
+        log::debug!("Adding `{}` feature", feature);
         self.client_features.insert(feature);
     }
 
@@ -71,7 +70,7 @@ impl DiscoMod {
                     aparte.schedule(Event::JidDisco(
                         account.clone(),
                         jid.clone(),
-                        disco.features.iter().map(|i| i.var.clone()).collect(),
+                        disco.features.into_iter().collect(),
                     ));
                     Ok(())
                 } else {
@@ -104,7 +103,7 @@ impl DiscoMod {
                 if let Ok(disco) = disco::DiscoInfoResult::try_from(el) {
                     aparte.schedule(Event::Disco(
                         account.clone(),
-                        disco.features.iter().map(|i| i.var.clone()).collect(),
+                        disco.features.into_iter().collect(),
                     ));
 
                     Ok(())

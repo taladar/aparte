@@ -32,7 +32,7 @@ use xmpp_parsers::{
     roster::{Ask, Item as RosterItem, Roster, Subscription},
     rsm::{First, SetResult},
     sasl::{Nonza as SaslNonza, Success},
-    stream_features::{SaslMechanisms, StreamFeatures},
+    stream_features::StreamFeatures,
 };
 
 use super::wait_for_screen;
@@ -254,9 +254,7 @@ async fn run_mock_server(
         .expect("mock: send_header 1");
 
     let sasl_features = StreamFeatures {
-        sasl_mechanisms: SaslMechanisms {
-            mechanisms: vec!["PLAIN".to_string()],
-        },
+        sasl_mechanisms: ["PLAIN".to_string()].into(),
         ..Default::default()
     };
     let mut stream = pending
@@ -350,7 +348,7 @@ async fn run_mock_server(
                                         let disco_result = disco::DiscoInfoResult {
                                             node: None,
                                             identities: vec![],
-                                            features: vec![disco::Feature::new(ns::SID)],
+                                            features: [ns::SID.to_string()].into(),
                                             extensions: vec![],
                                         };
                                         let resp = Iq::Result {
@@ -792,6 +790,7 @@ fn roster_result_iq(req_id: &str, from: &Jid, contacts: &[&str]) -> XmppStreamEl
             subscription: Subscription::Both,
             ask: Ask::None,
             groups: vec![],
+            approved: None,
         })
         .collect();
     let roster = Roster { ver: None, items };
@@ -981,6 +980,7 @@ pub fn muc_join_presence(
         items: vec![MucItem::new(affiliation, role)],
         invite: None,
         decline: None,
+        affiliations: None,
     };
     let mut presence = Presence::new(PresenceType::None);
     presence.from = Some(Jid::new(from).unwrap());
@@ -1003,6 +1003,7 @@ pub fn muc_join_presence_with_jid(
         items: vec![item],
         invite: None,
         decline: None,
+        affiliations: None,
     };
     let mut presence = Presence::new(PresenceType::None);
     presence.from = Some(Jid::new(from).unwrap());
