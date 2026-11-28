@@ -1578,12 +1578,14 @@ impl Aparte {
                             tokio_xmpp::Event::Online {
                                 bound_jid: jid,
                                 resumed: true,
+                                ..
                             } => {
                                 log::debug!("Reconnected to {}", jid);
                             }
                             tokio_xmpp::Event::Online {
                                 bound_jid: jid,
                                 resumed: false,
+                                ..
                             } => {
                                 if let Err(err) = event_tx.send(Event::Connected(account.clone(), jid)) {
                                     log::error!("Cannot send event to internal channel: {}", err);

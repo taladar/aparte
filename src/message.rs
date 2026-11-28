@@ -19,7 +19,7 @@ use chrono::format::Locale;
 use chrono::offset::{Local, TimeZone};
 use chrono::{DateTime, FixedOffset, Local as LocalTz, NaiveDate};
 #[cfg(feature = "image")]
-use image::io::Reader as ImageReader;
+use image::ImageReader;
 #[cfg(feature = "image")]
 use sixel_image::SixelImage;
 use std::collections::HashSet;
