@@ -37,7 +37,7 @@ flexi_logger = "^0.27"
 futures = "^0.3"
 fuzzy-matcher = "^0.3"
 hsluv = "^0.1"
-image = { version = "0.25.1", optional = true }
+image = { version = "0.25.2", optional = true }
 itertools = "0.12.1"
 libsignal-protocol = { git = "https://github.com/signalapp/libsignal", tag = "v0.20.0" }
 linked_hash_set = "^0.1"
